@@ -2,6 +2,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { Document } from "@langchain/core/documents";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -9,8 +10,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 
-import { Document } from "@langchain/core/documents";
-
+import standaloneQueryPrompt from './prompts.js';
 import fs from 'fs/promises';
 import * as dotenv from 'dotenv';
 
@@ -19,6 +19,8 @@ dotenv.config();
 
 class RagService {
   constructor() {
+    this.standaloneQueryPrompt = standaloneQueryPrompt;
+    this.userContext = [];
     this.model = new ChatOpenAI({ modelName: process.env.OPENAI_MODEL });
     this.outputParser = new StringOutputParser();
     this.embeddings = new OpenAIEmbeddings({
@@ -39,18 +41,9 @@ class RagService {
     this.textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize: process.env.TEXT_SPLITTER_CHUNK_SIZE,
       chunkOverlap: process.env.TEXT_SPLITTER_CHUNK_OVERLAP,
+      separators: ["\n\n", "\n", " ", ".", "?", "!", ";"],
     });
   }
-
-  // Get all books
-  // async getAllBooks() {
-  //   return this.books;
-  // }
-
-  // // Get book by ID
-  // async getBookById(id) {
-  //   return this.books.find(book => book.id === id);
-  // }
 
   // Create new Document and Create Vector Store
   async uploadDocumentAndCreateVectorStore(file) {
@@ -84,74 +77,19 @@ class RagService {
     return vectorStore;
   }
 
-  // // Update book
-  // async updateBook(id, updateData) {
-  //   const bookIndex = this.books.findIndex(book => book.id === id);
-    
-  //   if (bookIndex === -1) {
-  //     return null;
-  //   }
+  // Execute User query
+  async executeUserQuery(query) {
+    this.userContext.push(`User: ${query}`);
+    const chain = standaloneQueryPrompt.pipe(this.model).pipe(this.outputParser);
+    const response = await chain.invoke({ question: query, context: JSON.stringify(this.userContext) });
+    console.log(response);
+    const nerarestVector = await this.vectorStore.similaritySearch({query: response, k: 3 });
+    this.userContext.push(`Assistant: ${response}`);
+    console.log(this.userContext);
+    return nerarestVector;
+  
+  }
 
-  //   this.books[bookIndex] = {
-  //     ...this.books[bookIndex],
-  //     ...updateData,
-  //     updatedAt: new Date().toISOString()
-  //   };
-
-  //   return this.books[bookIndex];
-  // }
-
-  // // Delete book
-  // async deleteBook(id) {
-  //   const bookIndex = this.books.findIndex(book => book.id === id);
-    
-  //   if (bookIndex === -1) {
-  //     return null;
-  //   }
-
-  //   const deletedBook = this.books[bookIndex];
-  //   this.books.splice(bookIndex, 1);
-    
-  //   return deletedBook;
-  // }
-
-  // // Search books by title, author, or content
-  // async searchBooks(query) {
-  //   if (!query) {
-  //     return this.books;
-  //   }
-
-  //   const searchTerm = query.toLowerCase();
-    
-  //   return this.books.filter(book => 
-  //     book.title.toLowerCase().includes(searchTerm) ||
-  //     book.author.toLowerCase().includes(searchTerm) ||
-  //     book.description.toLowerCase().includes(searchTerm) ||
-  //     book.content.toLowerCase().includes(searchTerm) ||
-  //     book.genre.toLowerCase().includes(searchTerm)
-  //   );
-  // }
-
-  // // Get books by genre
-  // async getBooksByGenre(genre) {
-  //   return this.books.filter(book => 
-  //     book.genre.toLowerCase() === genre.toLowerCase()
-  //   );
-  // }
-
-  // // Get books by author
-  // async getBooksByAuthor(author) {
-  //   return this.books.filter(book => 
-  //     book.author.toLowerCase().includes(author.toLowerCase())
-  //   );
-  // }
-
-  // // Get books by year range
-  // async getBooksByYearRange(startYear, endYear) {
-  //   return this.books.filter(book => 
-  //     book.year >= startYear && book.year <= endYear
-  //   );
-  // }
 }
 
 export const RagDocService = new RagService(); 
