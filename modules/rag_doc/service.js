@@ -9,6 +9,8 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 
+import { Document } from "@langchain/core/documents";
+
 import fs from 'fs/promises';
 import * as dotenv from 'dotenv';
 
@@ -54,19 +56,32 @@ class RagService {
   async uploadDocumentAndCreateVectorStore(file) {
     const fileContent = await fs.readFile(file, 'utf8');
     const chunks = await this.textSplitter.splitText(fileContent);
-    const vectorStore = await this.vectorStore.addDocuments(chunks);
+    
+    // Get file stats for metadata
+    const fileStats = await fs.stat(file);
+    const fileName = file.split('/').pop(); // Get just the filename
+    
+    // Convert text chunks to Document objects with rich metadata
+    const documents = chunks.map((chunk, index) => new Document({ 
+      pageContent: chunk,
+      metadata: { 
+        source: file,
+        fileName: fileName,
+        // fileSize: fileStats.size,
+        fileCreated: fileStats.birthtime.toISOString(),
+        fileModified: fileStats.mtime.toISOString(),
+        chunkIndex: index,
+        totalChunks: chunks.length,
+        // chunkSize: chunk.length,
+        // uploadTimestamp: new Date().toISOString(),
+        // contentType: 'text/plain',
+        // processingModel: process.env.OPENAI_MODEL || 'gpt-4.1-nano',
+        // embeddingModel: 'text-embedding-3-small'
+      }
+    }));
+    
+    const vectorStore = await this.vectorStore.addDocuments(documents);
     return vectorStore;
-    // const prompt = ChatPromptTemplate.fromMessages([
-    //   ["system", "You are a helpful assistant. Please respond to the user's request only based on the given context."],
-    //   ["user", "Question: {question}\nContext: {context}"],
-    // ]);
-    
-    // const chain = prompt.pipe(this.model).pipe(this.outputParser);
-    
-    // const question = "Can you summarize this morning's meetings?"
-    // const context = "During this morning's meeting, we solved all world conflict."
-    // await chain.invoke({ question: question, context: context });
-        
   }
 
   // // Update book

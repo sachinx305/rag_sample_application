@@ -13,7 +13,7 @@ const router = express.Router();
 // router.get('/:id', RagDocController.getBookById);
 
 // POST /api/rag-doc - Create new book
-router.post('/', RagDocController.uploadDocumentAndCreateVectorStore);
+router.post('/', RagDocController.uploadDocumentAndCreateVectorStore.bind(RagDocController));
 
 // // PUT /api/rag-doc/:id - Update book
 // router.put('/:id', RagDocController.updateBook);
