@@ -1,0 +1,22 @@
+{
+  "name": "rag_1",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "Sachin Saini",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.61",
+    "@langchain/openai": "^0.5.16",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0",
+    "langchain": "^0.3.29",
+    "openai": "^5.8.2"
+  }
+}
