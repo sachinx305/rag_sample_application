@@ -5,4 +5,9 @@ const standaloneQueryPrompt = ChatPromptTemplate.fromMessages([
   ["user", "Question: {question}\nContext: {context}"],
 ]);
 
-export default standaloneQueryPrompt;
+const userQueryPrompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are an helpful AI assistant and a big Harry Potter fan. You will be given the conversation history and a user’s latest question. Go through the conversation history and answer the user’s question based on the context provided. If you don't find the answer in the context, say 'I don't know'"],
+  ["user", "Question: {question}\nContext: {context}\nHistory: {history}"],
+]);
+
+export default { standaloneQueryPrompt, userQueryPrompt };

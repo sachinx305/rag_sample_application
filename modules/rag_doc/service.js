@@ -10,7 +10,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 
-import standaloneQueryPrompt from './prompts.js';
+import * as prompts from './prompts.js';
 import fs from 'fs/promises';
 import * as dotenv from 'dotenv';
 
@@ -19,8 +19,9 @@ dotenv.config();
 
 class RagService {
   constructor() {
-    this.standaloneQueryPrompt = standaloneQueryPrompt;
     this.userContext = [];
+    this.standaloneQueryPrompt = prompts.default.standaloneQueryPrompt;
+    this.userQueryPrompt = prompts.default.userQueryPrompt;
     this.model = new ChatOpenAI({ modelName: process.env.OPENAI_MODEL });
     this.outputParser = new StringOutputParser();
     this.embeddings = new OpenAIEmbeddings({
@@ -79,15 +80,18 @@ class RagService {
 
   // Execute User query
   async executeUserQuery(query) {
+    console.log('User context:', this.userContext);
     this.userContext.push(`User: ${query}`);
-    const chain = standaloneQueryPrompt.pipe(this.model).pipe(this.outputParser);
+    const chain = this.standaloneQueryPrompt.pipe(this.model).pipe(this.outputParser);
     const response = await chain.invoke({ question: query, context: JSON.stringify(this.userContext) });
-    console.log(response);
-    const nerarestVector = await this.vectorStore.similaritySearch({query: response, k: 3 });
-    this.userContext.push(`Assistant: ${response}`);
-    console.log(this.userContext);
-    return nerarestVector;
-  
+    const searchQuery =  String(response);
+    const nearestVector = await this.vectorStore.similaritySearch(searchQuery, 3);
+    this.userContext.push(`Assistant: User is asking    ${response}`);
+    const chain2 = this.userQueryPrompt.pipe(this.model).pipe(this.outputParser);
+    const response2 = await chain2.invoke({ question: query, context: JSON.stringify(response), history: JSON.stringify(this.userContext) });
+    this.userContext.push(`Assistant: ${response2}`);
+    console.log('User context:', this.userContext);
+    return response2; 
   }
 
 }
