@@ -23,9 +23,6 @@ class RagService {
       model: "text-embedding-3-small",
     });
     
-    // Debug environment variables
-    console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
-    console.log('SUPABASE_PRIVATE_KEY:', process.env.SUPABASE_PRIVATE_KEY ? '***SET***' : '***NOT SET***');
     
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PRIVATE_KEY) {
       throw new Error('Missing required environment variables: SUPABASE_URL and SUPABASE_PRIVATE_KEY');
