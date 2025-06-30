@@ -37,47 +37,47 @@ The server will start on port 3000 (or the port specified in your environment va
 
 ### Books API
 
-Base URL: `/api/rag-book`
+Base URL: `/api/rag-doc`
 
 #### Get All Books
-- **GET** `/api/rag-book`
+- **GET** `/api/rag-doc`
 - Returns all books in the system
 
 #### Get Book by ID
-- **GET** `/api/rag-book/:id`
+- **GET** `/api/rag-doc/:id`
 - Returns a specific book by its ID
 
 #### Search Books
-- **GET** `/api/rag-book/search?query=search_term`
+- **GET** `/api/rag-doc/search?query=search_term`
 - Search books by title, author, description, content, or genre
 
 #### Create New Book
-- **POST** `/api/rag-book`
+- **POST** `/api/rag-doc`
 - Body: `{ "title": "Book Title", "author": "Author Name", "genre": "Genre", "year": 2023, "description": "Book description", "content": "Book content" }`
 
 #### Update Book
-- **PUT** `/api/rag-book/:id`
+- **PUT** `/api/rag-doc/:id`
 - Body: `{ "title": "Updated Title", "author": "Updated Author", ... }`
 
 #### Delete Book
-- **DELETE** `/api/rag-book/:id`
+- **DELETE** `/api/rag-doc/:id`
 - Deletes a book by its ID
 
 ## Example Usage
 
 ### Get all books
 ```bash
-curl http://localhost:3000/api/rag-book
+curl http://localhost:3000/api/rag-doc
 ```
 
 ### Search for books
 ```bash
-curl http://localhost:3000/api/rag-book/search?query=fitzgerald
+curl http://localhost:3000/api/rag-doc/search?query=fitzgerald
 ```
 
 ### Create a new book
 ```bash
-curl -X POST http://localhost:3000/api/rag-book \
+curl -X POST http://localhost:3000/api/rag-doc \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Pride and Prejudice",
@@ -91,12 +91,12 @@ curl -X POST http://localhost:3000/api/rag-book \
 
 ### Get a specific book
 ```bash
-curl http://localhost:3000/api/rag-book/1
+curl http://localhost:3000/api/rag-doc/1
 ```
 
 ### Update a book
 ```bash
-curl -X PUT http://localhost:3000/api/rag-book/1 \
+curl -X PUT http://localhost:3000/api/rag-doc/1 \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Updated Book Title"
@@ -105,7 +105,7 @@ curl -X PUT http://localhost:3000/api/rag-book/1 \
 
 ### Delete a book
 ```bash
-curl -X DELETE http://localhost:3000/api/rag-book/1
+curl -X DELETE http://localhost:3000/api/rag-doc/1
 ```
 
 ## Response Format

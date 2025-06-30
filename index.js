@@ -1,9 +1,9 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import ragBookRoutes from './modules/rag_book/routes.js';
-
+import * as dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
+import express from 'express';
+import ragDocRoutes from './modules/rag_doc/routes.js';
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api/rag-book', ragBookRoutes);
+app.use('/api/rag-doc', ragDocRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
