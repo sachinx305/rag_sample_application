@@ -1,5 +1,5 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { Document } from "@langchain/core/documents";
@@ -23,6 +23,7 @@ class RagService {
     this.standaloneQueryPrompt = prompts.default.standaloneQueryPrompt;
     this.userQueryPrompt = prompts.default.userQueryPrompt;
     this.model = new ChatOpenAI({ modelName: process.env.OPENAI_MODEL });
+    // this.model = new ChatGoogleGenerativeAI({ model: process.env.GEMINI_MODEL, maxOutputTokens: 2048 });
     this.outputParser = new StringOutputParser();
     this.embeddings = new OpenAIEmbeddings({
       model: "text-embedding-3-small",
