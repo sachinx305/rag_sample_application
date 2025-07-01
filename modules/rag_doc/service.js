@@ -3,6 +3,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { Document } from "@langchain/core/documents";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -35,10 +36,14 @@ class RagService {
     }
     
     this.supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PRIVATE_KEY);
-    this.vectorStore = new SupabaseVectorStore(this.embeddings, {
-      client: this.supabase,
-      tableName: process.env.SUPABASE_DOCUMENT_VECTOR_TABLE,
-      queryName: "match_documents",
+    // this.vectorStore = new SupabaseVectorStore(this.embeddings, {
+    //   client: this.supabase,
+    //   tableName: process.env.SUPABASE_DOCUMENT_VECTOR_TABLE,
+    //   queryName: "match_documents",
+    // });
+    this.vectorStore = new Chroma(this.embeddings, {
+      collectionName: process.env.CHROMA_COLLECTION_NAME,
+      url: process.env.CHROMA_URL,
     });
     this.textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize: process.env.TEXT_SPLITTER_CHUNK_SIZE,
@@ -87,12 +92,19 @@ class RagService {
     const response = await chain.invoke({ question: query, context: JSON.stringify(this.userContext) });
     const searchQuery =  String(response);
     const nearestVector = await this.vectorStore.similaritySearch(searchQuery, 3);
+    this.consoleLog(nearestVector, true);
     this.userContext.push(`Assistant: User is asking    ${response}`);
     const chain2 = this.userQueryPrompt.pipe(this.model).pipe(this.outputParser);
     const response2 = await chain2.invoke({ question: query, context: JSON.stringify(response), history: JSON.stringify(this.userContext) });
     this.userContext.push(`Assistant: ${response2}`);
     console.log('User context:', this.userContext);
     return response2; 
+  }
+
+  consoleLog(message, debug = false) {
+    if (debug) {
+      console.log(message);
+    }
   }
 
 }
