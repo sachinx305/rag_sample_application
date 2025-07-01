@@ -1,4 +1,5 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
@@ -23,13 +24,15 @@ class RagService {
     this.userContext = [];
     this.standaloneQueryPrompt = prompts.default.standaloneQueryPrompt;
     this.userQueryPrompt = prompts.default.userQueryPrompt;
-    this.model = new ChatOpenAI({ modelName: process.env.OPENAI_MODEL });
-    // this.model = new ChatGoogleGenerativeAI({ model: process.env.GEMINI_MODEL, maxOutputTokens: 2048 });
+    // this.model = new ChatOpenAI({ modelName: process.env.OPENAI_MODEL });   // this is paid model
+    this.model = new ChatGoogleGenerativeAI({ model: process.env.GEMINI_MODEL, maxOutputTokens: 2048 });
     this.outputParser = new StringOutputParser();
-    this.embeddings = new OpenAIEmbeddings({
+    this.embeddings = new OpenAIEmbeddings({      // this is paid model
       model: "text-embedding-3-small",
     });
-    
+    // this.embeddings = new GoogleGenerativeAIEmbeddings({
+    //   modelName: "gemini-embedding-exp-03-07", 
+    // });
     
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PRIVATE_KEY) {
       throw new Error('Missing required environment variables: SUPABASE_URL and SUPABASE_PRIVATE_KEY');
@@ -91,7 +94,8 @@ class RagService {
     const chain = this.standaloneQueryPrompt.pipe(this.model).pipe(this.outputParser);
     const response = await chain.invoke({ question: query, context: JSON.stringify(this.userContext) });
     const searchQuery =  String(response);
-    const nearestVector = await this.vectorStore.similaritySearch(searchQuery, 3);
+    console.log('Search query:', searchQuery);
+    const nearestVector = await this.vectorStore.similaritySearchWithScore(searchQuery, 3);
     this.consoleLog(nearestVector, true);
     this.userContext.push(`Assistant: User is asking    ${response}`);
     const chain2 = this.userQueryPrompt.pipe(this.model).pipe(this.outputParser);
