@@ -22,11 +22,53 @@ RAG_1/
 npm install
 ```
 
+## Setup ChromaDB
+
+This application uses ChromaDB as the vector store. You need to set up ChromaDB before running the application:
+
+```bash
+npm run setup
+```
+
+This will:
+- Check if Docker is installed
+- Create a `docker-compose.yml` file for ChromaDB
+- Create a `.env` file with default configuration
+- Start ChromaDB in a Docker container
+
+## Environment Configuration
+
+Update the `.env` file with your API keys:
+
+```env
+# OpenAI Configuration (required)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Optional: Use Gemini instead of OpenAI
+GOOGLE_API_KEY=your_google_api_key_here
+```
+
 ## Running the Server
 
 ```bash
 npm start
 ```
+
+## Testing ChromaDB Connection
+
+```bash
+npm run test-chroma
+```
+
+## Troubleshooting
+
+If you encounter embedding format errors, run:
+
+```bash
+npm run fix-deps
+```
+
+This will reinstall dependencies with compatible versions.
 
 The server will start on port 3000 (or the port specified in your environment variables).
 
