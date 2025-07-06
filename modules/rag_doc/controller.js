@@ -51,11 +51,12 @@ class RagController {
   async userQuery(req, res) {
     try {
       const { query } = req.body;
-      const nerarestVector = await RagDocService.executeUserQuery(query);
+      // const queryResult = await RagDocService.executeUserQuery(query);
+      const queryResult = await RagDocService.executeSequenceViaRunnableSequence(query);
 
       res.status(200).json({
         success: true,
-        data: nerarestVector,
+        data: queryResult,
         message: 'User query executed successfully'
       });
     } catch (error) {

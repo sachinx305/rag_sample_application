@@ -2,14 +2,13 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { Document } from "@langchain/core/documents";
 import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
-// import { combineDocuments } from "@langchain/core/documents";
 
 import * as prompts from './prompts.js';
 import fs from 'fs/promises';
 import * as dotenv from 'dotenv';
 import { LLM_TYPE, EMBEDDING_MODEL } from './constants.js';
 import RagInitializer from './initializer.js';
-import { consoleLog, testChromaConnection, createDocumentMetadata, processDocumentsInBatches } from './utils.js';
+import { consoleLog, testChromaConnection, createDocumentMetadata, processDocumentsInBatches, combineDocuments } from './utils.js';
 
 // Load environment variables
 dotenv.config();
@@ -64,7 +63,7 @@ class RagService {
     consoleLog('User context:\n'+ JSON.stringify(this.userContext, null, 2), this.debug);
     this.userContext.push(`User: ${query}`);
     const chain = this.standaloneQueryPrompt.pipe(this.model).pipe(this.outputParser);
-    const response = await chain.invoke({ question: query, context: JSON.stringify(this.userContext) });
+    const response = await chain.invoke({ question: query, history: JSON.stringify(this.userContext) });
     const searchQuery =  String(response);
     consoleLog('Search query:'+ searchQuery, this.debug);
     const nearestVector = await this.vectorStore.similaritySearch(searchQuery, 4);
@@ -77,32 +76,60 @@ class RagService {
     return response2; 
   }
 
-  // async executeStandaloneQueryViaRunnableSequence (query) {
-  //   const retriever = this.vectorStore.asRetriever();
-  //   const standaloneQuestionchain = this.standaloneQueryPrompt
-  //     .pipe(this.model)
-  //     .pipe(this.outputParser);
-  //   const retrieverChain = RunnableSequence.from([
-  //     prevRes => { return prevRes.standAloneQuestion },
-  //     retriever,
-  //     combineDocuments
-  //   ]);
-  //   const answerChain = this.userQueryPrompt
-  //     .pipe(this.model)
-  //     .pipe(this.outputParser);
-  //   const chain = RunnableSequence.from([
-  //     { standAloneQuestion: standaloneQuestionchain,
-  //       originalInput: new RunnablePassthrough()
-  //     },
-  //     {
-  //       context: retrieverChain,
-  //       question: standAloneQuestion
-  //     },
-  //     answerChain
-  //   ]);
-  //   const response = await chain.invoke({ question: query, context: JSON.stringify(this.userContext) });
-  //   return response;
-  // }
+  async executeSequenceViaRunnableSequence (query) {
+  // async executeUserQuery(query) {
+    this.userContext.push(`User: ${query}`);
+    
+    const retriever = this.vectorStore.asRetriever();
+    
+    // Create the standalone question chain
+    const standaloneQuestionChain = this.standaloneQueryPrompt
+      .pipe(this.model)
+      .pipe(this.outputParser);
+    
+    // Create the retriever chain that takes a question and returns documents
+    const retrieverChain = RunnableSequence.from([
+      prevResult => {
+        // consoleLog('Processing retrieverChain: ' + JSON.stringify(prevResult, null, 2), this.debug);
+        return prevResult.standalone_question;
+      },
+      retriever,
+      combineDocuments
+    ]);
+    
+    // Create the answer generation chain
+    const answerChain = this.userQueryPrompt
+      .pipe(this.model)
+      .pipe(this.outputParser);
+    
+    // Combine everything into a single RunnableSequence
+    const fullChain = RunnableSequence.from([
+      {
+        // Step 1: Generate standalone question
+        standalone_question: standaloneQuestionChain,
+        original_input: new RunnablePassthrough()
+      },
+      {
+        // Step 2: Use standalone question to retrieve context
+        question: (prevResult) => prevResult.standalone_question,
+        context: retrieverChain,
+        history: (prevResult) => {
+          // consoleLog('Processing retrieverChain history: ' + JSON.stringify(prevResult, null, 2), this.debug);
+          this.userContext.push(`Assistant: User is asking ${prevResult.standalone_question}`);
+          return prevResult.original_input.history;
+        }
+      },
+      // Step 3: Generate final answer
+      answerChain
+    ]);
+    
+    const response = await fullChain.invoke({ question: query, history: JSON.stringify(this.userContext) });
+    
+    this.userContext.push(`Assistant: ${response}`);
+    consoleLog('User context:\n'+ JSON.stringify(this.userContext, null, 2), this.debug);
+    
+    return response;
+  }
 
   // Test ChromaDB connection using utility function
   async testChromaConnection() {

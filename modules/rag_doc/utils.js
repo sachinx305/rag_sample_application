@@ -112,4 +112,13 @@ export async function processDocumentsInBatches(documents, vectorStore, batchSiz
   }
   
   console.log('Vector store: ✅ (All batches processed)');
+}
+
+/**
+ * Combine multiple documents into a single string
+ * @param {Array} docs - Array of document objects with pageContent property
+ * @returns {string} - Combined document content separated by double newlines
+ */
+export function combineDocuments(docs) {
+  return docs.map((doc) => doc.pageContent).join('\n\n');
 } 
