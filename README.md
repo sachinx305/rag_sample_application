@@ -1,168 +1,229 @@
-# RAG Book API
+# RAG Document Processing API
 
-A simple Express server with a modular structure for managing books with RAG (Retrieval-Augmented Generation) capabilities.
+A powerful Express.js server that implements Retrieval-Augmented Generation (RAG) for intelligent document processing and querying. This application uses ChromaDB as a vector store and LangChain for document processing and AI interactions.
 
-## Project Structure
+## 🚀 Features
+
+- **Document Upload & Processing**: Upload text files and automatically create vector embeddings
+- **Intelligent Querying**: Ask questions about uploaded documents using RAG
+- **Multi-Model Support**: Choose between OpenAI GPT models or Google Gemini
+- **Vector Storage**: ChromaDB integration for efficient similarity search
+- **Conversational Context**: Maintains conversation history for contextual responses
+- **Batch Processing**: Handles large documents efficiently with configurable batch sizes
+- **Rich Metadata**: Tracks comprehensive document and chunk metadata
+
+## 📁 Project Structure
 
 ```
-RAG_1/
-├── index.js                 # Main server file
-├── package.json
+rag_sample_application/
+├── index.js                    # Main server file
+├── package.json               # Dependencies and scripts
+├── docker-compose.yml         # ChromaDB container configuration
+├── setup-chroma.js           # ChromaDB setup script
+├── test-chroma.js            # ChromaDB connection test
+├── fix-dependencies.js       # Dependency fix utility
 ├── modules/
-│   └── rag_book/
-│       ├── controller.js    # HTTP request handlers
-│       ├── service.js       # Business logic
-│       └── routes.js        # API routes
+│   └── rag_doc/
+│       ├── controller.js      # HTTP request handlers
+│       ├── service.js         # RAG business logic
+│       ├── routes.js          # API routes
+│       ├── constants.js       # LLM and embedding configurations
+│       └── prompts.js         # LangChain prompt templates
+├── chroma_db/                # ChromaDB data directory
+├── db/                       # Database files
 └── README.md
 ```
 
-## Installation
+## 🛠️ Installation
 
-```bash
-npm install
-```
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd rag_sample_application
+   ```
 
-## Setup ChromaDB
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-This application uses ChromaDB as the vector store. You need to set up ChromaDB before running the application:
+3. **Setup ChromaDB**
+   ```bash
+   npm run setup
+   ```
+   This will:
+   - Check if Docker is installed
+   - Create a `docker-compose.yml` file for ChromaDB
+   - Create a `.env` file with default configuration
+   - Start ChromaDB in a Docker container
 
-```bash
-npm run setup
-```
-
-This will:
-- Check if Docker is installed
-- Create a `docker-compose.yml` file for ChromaDB
-- Create a `.env` file with default configuration
-- Start ChromaDB in a Docker container
-
-## Environment Configuration
+## ⚙️ Environment Configuration
 
 Update the `.env` file with your API keys:
 
 ```env
-# OpenAI Configuration (required)
+# ChromaDB Configuration
+CHROMA_URL=http://localhost:8000
+CHROMA_COLLECTION_NAME=documents
+
+# OpenAI Configuration (required for OpenAI models)
+OPENAI_MODEL=gpt-4o-mini
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Optional: Use Gemini instead of OpenAI
+# Gemini Configuration (alternative to OpenAI)
+GEMINI_MODEL=gemini-1.5-flash
 GOOGLE_API_KEY=your_google_api_key_here
+
+# Text Processing Configuration
+TEXT_SPLITTER_CHUNK_SIZE=1000
+TEXT_SPLITTER_CHUNK_OVERLAP=200
+
+# File Upload Configuration
+MAX_FILE_SIZE=52428800
+LARGE_FILE_THRESHOLD=10485760
+BATCH_SIZE=25
+MULTER_DEST=./uploads
+
+# Supabase Configuration (optional, for Supabase vector store)
+SUPABASE_URL=your_supabase_url_here
+SUPABASE_PRIVATE_KEY=your_supabase_private_key_here
+SUPABASE_DOCUMENT_VECTOR_TABLE=documents
 ```
 
-## Running the Server
+## 🚀 Running the Application
 
-```bash
-npm start
-```
+1. **Start the server**
+   ```bash
+   npm start
+   ```
+   The server will start on port 3000 (or the port specified in your environment variables).
 
-## Testing ChromaDB Connection
+2. **Test ChromaDB connection**
+   ```bash
+   npm run test-chroma
+   ```
 
-```bash
-npm run test-chroma
-```
+3. **Development mode (with auto-restart)**
+   ```bash
+   npm run dev
+   ```
 
-## Troubleshooting
-
-If you encounter embedding format errors, run:
-
-```bash
-npm run fix-deps
-```
-
-This will reinstall dependencies with compatible versions.
-
-The server will start on port 3000 (or the port specified in your environment variables).
-
-## API Endpoints
+## 📡 API Endpoints
 
 ### Health Check
 - **GET** `/health` - Check if server is running
 
-### Books API
+### Document Processing API
 
 Base URL: `/api/rag-doc`
 
-#### Get All Books
-- **GET** `/api/rag-doc`
-- Returns all books in the system
-
-#### Get Book by ID
-- **GET** `/api/rag-doc/:id`
-- Returns a specific book by its ID
-
-#### Search Books
-- **GET** `/api/rag-doc/search?query=search_term`
-- Search books by title, author, description, content, or genre
-
-#### Create New Book
+#### Upload Document
 - **POST** `/api/rag-doc`
-- Body: `{ "title": "Book Title", "author": "Author Name", "genre": "Genre", "year": 2023, "description": "Book description", "content": "Book content" }`
+- **Content-Type**: `multipart/form-data`
+- **Body**: 
+  - `file`: Text file (.txt only, max 50MB)
+- **Description**: Uploads a text document, processes it into chunks, creates embeddings, and stores them in ChromaDB
+- **Response**: Document processing status and metadata
 
-#### Update Book
-- **PUT** `/api/rag-doc/:id`
-- Body: `{ "title": "Updated Title", "author": "Updated Author", ... }`
+#### Query Documents
+- **POST** `/api/rag-doc/query`
+- **Content-Type**: `application/json`
+- **Body**: 
+  ```json
+  {
+    "query": "Your question about the uploaded documents"
+  }
+  ```
+- **Description**: Queries the uploaded documents using RAG to provide intelligent responses
+- **Response**: AI-generated answer based on document content
 
-#### Delete Book
-- **DELETE** `/api/rag-doc/:id`
-- Deletes a book by its ID
+## 📝 Example Usage
 
-## Example Usage
-
-### Get all books
-```bash
-curl http://localhost:3000/api/rag-doc
-```
-
-### Search for books
-```bash
-curl http://localhost:3000/api/rag-doc/search?query=fitzgerald
-```
-
-### Create a new book
+### Upload a document
 ```bash
 curl -X POST http://localhost:3000/api/rag-doc \
+  -F "file=@your_document.txt"
+```
+
+### Query uploaded documents
+```bash
+curl -X POST http://localhost:3000/api/rag-doc/query \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Pride and Prejudice",
-    "author": "Jane Austen",
-    "genre": "Romance",
-    "year": 1813,
-    "description": "A classic romance novel",
-    "content": "It is a truth universally acknowledged..."
+    "query": "What are the main topics discussed in the uploaded documents?"
   }'
 ```
 
-### Get a specific book
+### Check server health
 ```bash
-curl http://localhost:3000/api/rag-doc/1
+curl http://localhost:3000/health
 ```
 
-### Update a book
+## 🔧 Configuration Options
+
+### Text Processing
+- `TEXT_SPLITTER_CHUNK_SIZE`: Size of text chunks (default: 1000 characters)
+- `TEXT_SPLITTER_CHUNK_OVERLAP`: Overlap between chunks (default: 200 characters)
+- `BATCH_SIZE`: Number of documents to process in each batch (default: 25)
+
+### File Upload
+- `MAX_FILE_SIZE`: Maximum file size in bytes (default: 50MB)
+- `LARGE_FILE_THRESHOLD`: Threshold for large file processing (default: 10MB)
+- `MULTER_DEST`: Temporary upload directory (default: ./uploads)
+
+### AI Models
+- **OpenAI**: Uses GPT-4o-mini by default
+- **Gemini**: Uses gemini-1.5-flash by default
+- **Embeddings**: text-embedding-3-small (OpenAI) or gemini-embedding-exp-03-07 (Gemini)
+
+## 🐳 Docker Management
+
+### Start ChromaDB
 ```bash
-curl -X PUT http://localhost:3000/api/rag-doc/1 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Updated Book Title"
-  }'
+docker-compose up -d
 ```
 
-### Delete a book
+### Stop ChromaDB
 ```bash
-curl -X DELETE http://localhost:3000/api/rag-doc/1
+docker-compose down
 ```
 
-## Response Format
+### View ChromaDB logs
+```bash
+docker-compose logs chroma
+```
 
-All API responses follow this format:
+## 🔍 Troubleshooting
 
+### Dependency Issues
+If you encounter embedding format errors, run:
+```bash
+npm run fix-deps
+```
+
+### ChromaDB Connection Issues
+1. Ensure Docker is running
+2. Check if ChromaDB container is up: `docker ps`
+3. Test connection: `npm run test-chroma`
+4. Restart ChromaDB: `docker-compose restart`
+
+### File Upload Issues
+- Ensure files are `.txt` format only
+- Check file size limits in `.env`
+- Verify upload directory permissions
+
+## 📊 Response Format
+
+### Success Response
 ```json
 {
   "success": true,
-  "data": [...],
+  "data": {...},
   "message": "Operation completed successfully"
 }
 ```
 
-Error responses:
+### Error Response
 ```json
 {
   "success": false,
@@ -171,19 +232,35 @@ Error responses:
 }
 ```
 
-## Features
+## 🧠 How It Works
 
-- **Modular Architecture**: Clean separation of concerns with controller, service, and routes
-- **RESTful API**: Standard HTTP methods for CRUD operations
-- **Search Functionality**: Search across multiple book fields
-- **Error Handling**: Comprehensive error handling and status codes
-- **In-Memory Storage**: Demo data with sample books (can be replaced with database)
+1. **Document Upload**: Text files are uploaded and read
+2. **Text Splitting**: Documents are split into manageable chunks using RecursiveCharacterTextSplitter
+3. **Embedding Generation**: Each chunk is converted to vector embeddings using OpenAI or Gemini
+4. **Vector Storage**: Embeddings are stored in ChromaDB with rich metadata
+5. **Query Processing**: User queries are processed through a two-stage RAG pipeline:
+   - **Standalone Query Generation**: Converts conversational queries to standalone search queries
+   - **Context-Aware Response**: Generates responses using retrieved context and conversation history
 
-## Future Enhancements
+## 🔮 Future Enhancements
 
-- Database integration (MongoDB, PostgreSQL, etc.)
-- Authentication and authorization
-- File upload for book content
-- Advanced search with filters
-- Pagination for large datasets
-- RAG integration for intelligent book recommendations 
+- [ ] Support for multiple file formats (PDF, DOCX, etc.)
+- [ ] Web interface for document upload and querying
+- [ ] User authentication and document ownership
+- [ ] Advanced search filters and pagination
+- [ ] Real-time document collaboration
+- [ ] Integration with additional vector stores
+- [ ] Custom prompt templates
+- [ ] Document versioning and history
+
+## 📄 License
+
+ISC License - see package.json for details
+
+## 👨‍💻 Author
+
+Sachin Saini
+
+---
+
+**Note**: This application requires API keys for OpenAI or Google Gemini to function. Make sure to configure your `.env` file with valid API keys before running the application. 
