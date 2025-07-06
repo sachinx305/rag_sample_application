@@ -52,6 +52,14 @@ OPENAI_API_KEY=your_openai_api_key_here
 TEXT_SPLITTER_CHUNK_SIZE=1000
 TEXT_SPLITTER_CHUNK_OVERLAP=200
 
+# File Size Configuration
+MAX_FILE_SIZE=52428800
+LARGE_FILE_THRESHOLD=10485760
+BATCH_SIZE=25
+
+# Multer Configuration
+MULTER_DEST=./uploads
+
 # Supabase Configuration (if using Supabase instead of ChromaDB)
 SUPABASE_URL=your_supabase_url_here
 SUPABASE_PRIVATE_KEY=your_supabase_private_key_here

@@ -15,20 +15,20 @@ import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase"
 import * as prompts from './prompts.js';
 import fs from 'fs/promises';
 import * as dotenv from 'dotenv';
-import { LLM_TYPE } from './constants.js';
+import { LLM_TYPE, EMBEDDING_MODEL } from './constants.js';
 
 // Load environment variables
 dotenv.config();
 
 class RagService {
   constructor() {
-    const LLM = LLM_TYPE.OPENAI;
+    this.llmType = LLM_TYPE.OPENAI;
     this.userContext = [];
     this.standaloneQueryPrompt = prompts.default.standaloneQueryPrompt;
     this.userQueryPrompt = prompts.default.userQueryPrompt;
     this.outputParser = new StringOutputParser();
-    this.initializeLLMModel(LLM);
-    this.initializeEmbeddings(LLM);
+    this.initializeLLMModel();
+    this.initializeEmbeddings();
     // this.initializeSupabase();
     this.initializeChromaDB();
     this.initializeTextSplitter();
@@ -36,9 +36,13 @@ class RagService {
 
   // Create new Document and Create Vector Store
   async uploadDocumentAndCreateVectorStore(file) {
+    let currentTime = new Date();
     const fileContent = await fs.readFile(file, 'utf8');
+    console.log('File content: ✅ TimeTaken:', new Date() - currentTime, 'ms');
+    currentTime = new Date();
     const chunks = await this.textSplitter.splitText(fileContent);
-    // console.log('Chunks:', chunks);
+    console.log(`Chunks: ✅ (${chunks.length} chunks created) TimeTaken:`, new Date() - currentTime, 'ms');
+    currentTime = new Date();
     
     // Get file stats for metadata
     const fileStats = await fs.stat(file);
@@ -50,21 +54,45 @@ class RagService {
       metadata: { 
         source: file,
         fileName: fileName,
-        // fileSize: fileStats.size,
+        fileSize: fileStats.size,
         fileCreated: fileStats.birthtime.toISOString(),
         fileModified: fileStats.mtime.toISOString(),
         chunkIndex: index,
         totalChunks: chunks.length,
-        // chunkSize: chunk.length,
-        // uploadTimestamp: new Date().toISOString(),
-        // contentType: 'text/plain',
-        // processingModel: process.env.OPENAI_MODEL || 'gpt-4.1-nano',
-        // embeddingModel: 'text-embedding-3-small'
+        chunkSize: chunk.length,
+        uploadTimestamp: new Date().toISOString(),
+        contentType: 'text/plain',
+        processingModel: process.env.OPENAI_MODEL || 'gpt-4',
+        embeddingModel: EMBEDDING_MODEL[this.llmType].model
       }
     }));
-    
-    const vectorStore = await this.vectorStore.addDocuments(documents);
-    return vectorStore;
+    console.log('Documents: ✅ TimeTaken:', new Date() - currentTime, 'ms');
+    currentTime = new Date();
+    // Process documents in batches to avoid ChromaDB payload size limits
+    const BATCH_SIZE =  parseInt(process.env.BATCH_SIZE);
+    console.log(`🔄 Processing ${documents.length} documents in batches of ${BATCH_SIZE}...`);
+    for (let i = 0; i < documents.length; i += BATCH_SIZE) {
+      const batch = documents.slice(i, i + BATCH_SIZE);
+      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(documents.length / BATCH_SIZE);
+      console.log(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} documents)...`);
+      
+      try {
+        await this.vectorStore.addDocuments(batch);
+        console.log(`✅ Batch ${batchNumber} processed successfully TimeTaken:`, new Date() - currentTime, 'ms');
+        currentTime = new Date();
+      } catch (error) {
+        console.error(`❌ Error processing batch ${batchNumber}:`, error.message);
+        throw new Error(`Failed to process batch ${batchNumber}: ${error.message}`);
+      }
+      
+      // Add a small delay between batches to prevent overwhelming ChromaDB
+      if (i + BATCH_SIZE < documents.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+    console.log('Vector store: ✅ (All batches processed)');
+    return this.vectorStore;
   }
 
   // Execute User query
@@ -99,21 +127,26 @@ class RagService {
     });
   }
 
-  initializeLLMModel(LLM_TYPE) {
-    if (LLM_TYPE === "OPENAI") {
+  initializeLLMModel() {
+    const llmType = this.llmType;
+    if (llmType === LLM_TYPE.OPENAI) {
       this.model = new ChatOpenAI({ modelName: process.env.OPENAI_MODEL });   // this is paid model
-    } else if (LLM_TYPE === "GEMINI") {
+    } else if (llmType === LLM_TYPE.GEMINI) {
       this.model = new ChatGoogleGenerativeAI({ model: process.env.GEMINI_MODEL, maxOutputTokens: 2048 });
     }
   }
 
-  initializeEmbeddings(LLM_TYPE) {
-    this.embeddings = new OpenAIEmbeddings({      // this is paid model
-      model: "text-embedding-3-small",
-    });
-    // this.embeddings = new GoogleGenerativeAIEmbeddings({
-    //         modelName: "gemini-embedding-exp-03-07",  
-    // });
+  initializeEmbeddings() {
+    const llmType = this.llmType;
+    if (llmType === LLM_TYPE.OPENAI) {
+      this.embeddings = new OpenAIEmbeddings({
+        model: EMBEDDING_MODEL.OPENAI.model,
+      });
+    } else if (llmType === LLM_TYPE.GEMINI) {
+      this.embeddings = new GoogleGenerativeAIEmbeddings({
+        modelName: EMBEDDING_MODEL.GEMINI.model,
+      });
+    }
   }
 
   initializeSupabase() {
