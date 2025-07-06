@@ -77,9 +77,7 @@ class RagService {
   }
 
   async executeSequenceViaRunnableSequence (query) {
-  // async executeUserQuery(query) {
     this.userContext.push(`User: ${query}`);
-    
     const retriever = this.vectorStore.asRetriever();
     
     // Create the standalone question chain
