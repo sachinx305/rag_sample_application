@@ -1,11 +1,11 @@
-import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { StringOutputParser } from "@langchain/core/output_parsers";
 import { Document } from "@langchain/core/documents";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
 
-import * as prompts from './prompts.js';
 import fs from 'fs/promises';
 import * as dotenv from 'dotenv';
+
+import * as prompts from './prompts.js';
 import { LLM_TYPE, EMBEDDING_MODEL } from './constants.js';
 import RagInitializer from './initializer.js';
 import { consoleLog, testChromaConnection, createDocumentMetadata, processDocumentsInBatches, combineDocuments } from './utils.js';
