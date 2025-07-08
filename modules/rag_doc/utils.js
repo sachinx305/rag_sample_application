@@ -22,29 +22,37 @@ export async function testChromaConnection(vectorStore) {
   try {
     // Test basic connection by trying to access the collection
     const collection = await vectorStore.collection;
-    console.log('✅ ChromaDB collection accessed successfully');
-    
+    console.log("✅ ChromaDB collection accessed successfully");
+
     // Try a simple similarity search with a basic query
     const results = await vectorStore.similaritySearch("test", 1);
-    console.log('✅ ChromaDB search successful');
+    console.log("✅ ChromaDB search successful");
     return true;
   } catch (error) {
-    console.error('ChromaDB connection test failed:', error);
-    
+    console.error("ChromaDB connection test failed:", error);
+
     // If the error is about embeddings, try a different approach
-    if (error.message.includes('every is not a function') || error.message.includes('embedding')) {
-      console.log('⚠️  Embedding format issue detected. Trying alternative approach...');
+    if (
+      error.message.includes("every is not a function") ||
+      error.message.includes("embedding")
+    ) {
+      console.log(
+        "⚠️  Embedding format issue detected. Trying alternative approach..."
+      );
       try {
         // Try to just check if the collection exists
         await vectorStore.collection;
-        console.log('✅ ChromaDB connection successful (collection exists)');
+        console.log("✅ ChromaDB connection successful (collection exists)");
         return true;
       } catch (innerError) {
-        console.error('Alternative connection test also failed:', innerError.message);
+        console.error(
+          "Alternative connection test also failed:",
+          innerError.message
+        );
         return false;
       }
     }
-    
+
     return false;
   }
 }
@@ -60,9 +68,17 @@ export async function testChromaConnection(vectorStore) {
  * @param {Object} embeddingModel - Embedding model configuration
  * @returns {Object} - Document metadata object
  */
-export function createDocumentMetadata(file, fileStats, index, totalChunks, chunk, llmType, embeddingModel) {
-  const fileName = file.split('/').pop(); // Get just the filename
-  
+export function createDocumentMetadata(
+  file,
+  fileStats,
+  index,
+  totalChunks,
+  chunk,
+  llmType,
+  embeddingModel
+) {
+  const fileName = file.split("/").pop(); // Get just the filename
+
   return {
     source: file,
     fileName: fileName,
@@ -73,9 +89,9 @@ export function createDocumentMetadata(file, fileStats, index, totalChunks, chun
     totalChunks: totalChunks,
     chunkSize: chunk.length,
     uploadTimestamp: new Date().toISOString(),
-    contentType: 'text/plain',
-    processingModel: process.env.OPENAI_MODEL || 'gpt-4',
-    embeddingModel: embeddingModel[llmType].model
+    contentType: "text/plain",
+    processingModel: process.env.OPENAI_MODEL || "gpt-4",
+    embeddingModel: embeddingModel[llmType].model,
   };
 }
 
@@ -86,32 +102,46 @@ export function createDocumentMetadata(file, fileStats, index, totalChunks, chun
  * @param {number} batchSize - Size of each batch
  * @returns {Promise<void>}
  */
-export async function processDocumentsInBatches(documents, vectorStore, batchSize) {
-  console.log(`🔄 Processing ${documents.length} documents in batches of ${batchSize}...`);
-  
+export async function processDocumentsInBatches(
+  documents,
+  vectorStore,
+  batchSize
+) {
+  console.log(
+    `🔄 Processing ${documents.length} documents in batches of ${batchSize}...`
+  );
+
   for (let i = 0; i < documents.length; i += batchSize) {
     const batch = documents.slice(i, i + batchSize);
     const batchNumber = Math.floor(i / batchSize) + 1;
     const totalBatches = Math.ceil(documents.length / batchSize);
     const currentTime = new Date();
-    
-    console.log(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} documents)...`);
-    
+
+    console.log(
+      `📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} documents)...`
+    );
+
     try {
       await vectorStore.addDocuments(batch);
-      console.log(`✅ Batch ${batchNumber} processed successfully TimeTaken:`, new Date() - currentTime, 'ms');
+      console.log(
+        `✅ Batch ${batchNumber} processed successfully TimeTaken:`,
+        new Date() - currentTime,
+        "ms"
+      );
     } catch (error) {
       console.error(`❌ Error processing batch ${batchNumber}:`, error.message);
-      throw new Error(`Failed to process batch ${batchNumber}: ${error.message}`);
+      throw new Error(
+        `Failed to process batch ${batchNumber}: ${error.message}`
+      );
     }
-    
+
     // Add a small delay between batches to prevent overwhelming ChromaDB
     if (i + batchSize < documents.length) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
-  
-  console.log('Vector store: ✅ (All batches processed)');
+
+  console.log("Vector store: ✅ (All batches processed)");
 }
 
 /**
@@ -120,5 +150,5 @@ export async function processDocumentsInBatches(documents, vectorStore, batchSiz
  * @returns {string} - Combined document content separated by double newlines
  */
 export function combineDocuments(docs) {
-  return docs.map((doc) => doc.pageContent).join('\n\n');
-} 
+  return docs.map((doc) => doc.pageContent).join("\n\n");
+}
