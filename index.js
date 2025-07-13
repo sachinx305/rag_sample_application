@@ -13,7 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/api/chains/rag-doc", ragDocRoutes);
-app.use("/api/graph/rag-doc", ragDocGraphRoutes);
+// app.use("/api/graph/rag-doc", ragDocGraphRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
