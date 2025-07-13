@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 import express from "express";
-import ragDocRoutes from "./modules/rag_doc/routes.js";
+import ragDocRoutes from "./modules/chains/rag_doc/routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,7 +12,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use("/api/rag-doc", ragDocRoutes);
+app.use("/api/chains/rag-doc", ragDocRoutes);
+app.use("/api/graph/rag-doc", ragDocGraphRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
