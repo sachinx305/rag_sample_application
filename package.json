@@ -17,8 +17,9 @@
   "dependencies": {
     "@chroma-core/default-embed": "^0.1.8",
     "@langchain/community": "^0.3.47",
-    "@langchain/core": "^0.3.61",
+    "@langchain/core": "^0.3.62",
     "@langchain/google-genai": "^0.2.14",
+    "@langchain/langgraph": "^0.3.8",
     "@langchain/openai": "^0.5.16",
     "@langchain/textsplitters": "^0.1.0",
     "@supabase/supabase-js": "^2.50.2",
