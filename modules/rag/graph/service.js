@@ -29,6 +29,7 @@ class RagService {
     this.userContext.push(`User: ${query}`);
     const inputs = { messages: [new HumanMessage(query)] };
     let finalState;
+    
     finalState = await graphApp.invoke(inputs);
     // for await (const output of await graphApp.stream(inputs)) {
     //   for (const [key, value] of Object.entries(output)) {

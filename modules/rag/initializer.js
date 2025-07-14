@@ -6,6 +6,8 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { createClient } from "@supabase/supabase-js";
 import { LLM_TYPE, EMBEDDING_MODEL, VECTOR_STORE } from "./constants.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 class infraInitializer {
   constructor() {
