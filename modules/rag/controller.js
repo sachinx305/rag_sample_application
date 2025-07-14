@@ -76,7 +76,7 @@ class RagController {
       try {
         const { query } = req.body;
         const queryResult =
-          await RagChainsService.executeRagGraph(query);
+          await RagGraphService.executeRagGraph(query);
   
         res.status(200).json({
           success: true,

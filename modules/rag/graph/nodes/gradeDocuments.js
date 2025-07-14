@@ -13,15 +13,11 @@ async function gradeDocuments(state) {
     console.log("---GET RELEVANCE---");
   
     const { messages } = state;
-    const chain = relevanceChain();
-  
     const lastMessage = messages[messages.length - 1];
-  
-    const score = await chain.invoke({
+    const score = await relevanceChain.invoke({
       question: messages[0].content ,
-      context: lastMessage.content ,
+      context: lastMessage.content
     });
-  
     return {
       messages: [score]
     };

@@ -1,14 +1,12 @@
-import { vectorStore } from "../chains/retrieverChain.js";
+import retrieverChain from "../chains/retrieverChain.js";
 import { ToolMessage } from "@langchain/core/messages";
+import { z } from "zod";
 
 
 async function retriever(state) {
     console.log("---GET RETRIEVED DOCS---");
     const { messages } = state;
-    
-    const retriever = vectorStore.asRetriever();
-    const docs = await retriever.invoke(messages[0].content);
-    
+    const docs = await retrieverChain.invoke(messages[1].content);
   
     return {
       messages: [new ToolMessage(docs, {

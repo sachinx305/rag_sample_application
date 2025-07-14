@@ -26,7 +26,7 @@ class RagService {
   }
 
   async executeRagGraph(query) {
-    this.userContext.push(`User: ${query}`);
+    // this.userContext.push(`User: ${query}`);
     const inputs = { messages: [new HumanMessage(query)] };
     let finalState;
     

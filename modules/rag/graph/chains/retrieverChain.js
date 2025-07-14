@@ -1,21 +1,10 @@
 import infraInitializer from "../../initializer.js";
-// import { retrieverPrompt } from "../prompts.js";
-// import { z } from "zod";
+import { combineDocuments } from "../../chains/utils.js";
 
 const infra = new infraInitializer();
-const model = infra.initializeLLMModel();
 const vectorStore = infra.getvectorStore();
+const retriever = vectorStore.asRetriever();
 
-// const tool = {
-//     name: "retrieve_docs",
-//     description: "Retrieve documents from the vector store.",
-//     schema: z.object({
-//       docs: z.array(z.string()).describe("The retrieved documents."),
-//     })
-//   }
+const retrieverChain = retriever.pipe(combineDocuments);
 
-// const retrieverChain = retrieverPrompt.pipe(model).bindTools([tool], {
-//     tool_choice: tool.name,
-//   });
-
-export { vectorStore };
+export default retrieverChain;
