@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 import express from "express";
-import ragDocRoutes from "./modules/routes.js";
+import ragDocRoutes from "./modules/rag/routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;

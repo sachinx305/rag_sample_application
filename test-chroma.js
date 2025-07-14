@@ -1,4 +1,4 @@
-import { RagDocService } from "./modules/chains/service.js";
+import { RagDocService } from "./modules/rag/chains/service.js";
 
 console.log("🧪 Testing ChromaDB connection...\n");
 
