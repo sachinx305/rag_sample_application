@@ -20,7 +20,7 @@ try {
 const dockerComposeContent = `version: '3.8'
 services:
   chroma:
-    image: chromadb/chroma:0.4.22
+    image: chromadb/chroma:latest
     container_name: chromadb
     ports:
       - "8000:8000"
