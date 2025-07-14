@@ -13,18 +13,15 @@ dotenv.config();
 
 class RagService {
   constructor() {
-    this.llmType = LLM_TYPE.OPENAI;
-    this.userContext = [];
-    this.standaloneQueryPrompt = prompts.default.standaloneQueryPrompt;
-    this.userQueryPrompt = prompts.default.userQueryPrompt;
+    
     this.outputParser = new StringOutputParser();
     this.debug = process.env.DEBUG;
 
     // Initialize components using the initializer
     const initializer = new infraInitializer();
+    this.llmType = initializer.getLLMType();
     this.model = initializer.initializeLLMModel();
-    this.embeddings = initializer.initializeEmbeddings();
-    this.vectorStore = initializer.initializeChromaDB(this.embeddings);
+    this.vectorStore = initializer.getvectorStore();
     this.textSplitter = initializer.initializeTextSplitter();
   }
 

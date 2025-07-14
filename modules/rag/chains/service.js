@@ -34,8 +34,7 @@ class RagService {
     const initializer = new infraInitializer();
     this.llmType = initializer.getLLMType();
     this.model = initializer.initializeLLMModel();
-    this.embeddings = initializer.initializeEmbeddings();
-    this.vectorStore = initializer.initializeChromaDB(this.embeddings);
+    this.vectorStore = initializer.getvectorStore();
     this.textSplitter = initializer.initializeTextSplitter();
   }
 

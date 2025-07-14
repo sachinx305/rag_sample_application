@@ -16,4 +16,4 @@ const userQueryPrompt = ChatPromptTemplate.fromMessages([
   ["user", "Question: {question}\n\nContext: {context}\n\nHistory: {history}"],
 ]);
 
-export default { standaloneQueryPrompt, userQueryPrompt };
+export { standaloneQueryPrompt, userQueryPrompt };

@@ -1,6 +1,7 @@
 import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
-import { Annotation } from "@langchain/langgraph";
-import { BaseMessage } from "@langchain/core/messages";
+import retriever from "./nodes/retriever.js";
+import standaloneQuery from "./nodes/standaloneQuery.js";
+import gradeDocuments from "./nodes/gradeDocuments.js";
 
 const GraphState = Annotation.Root({
   messages: Annotation({
@@ -12,38 +13,38 @@ const GraphState = Annotation.Root({
 // Define the graph
 const workflow = new StateGraph(GraphState)
   // Define the nodes which we'll cycle between.
-  .addNode("agent", agent)
-  .addNode("retrieve", toolNode)
+  .addNode("retrieve", retriever)
+  .addNode("standaloneQuery", standaloneQuery)
   .addNode("gradeDocuments", gradeDocuments)
-  .addNode("rewrite", rewrite)
-  .addNode("generate", generate);
+  // .addNode("answer", answer);
 
   // Call agent node to decide to retrieve or not
-workflow.addEdge(START, "agent");
+workflow.addEdge(START, "standaloneQuery");
 
-// Decide whether to retrieve
-workflow.addConditionalEdges(
-  "agent",
-  // Assess agent decision
-  shouldRetrieve,
-);
+// // Decide whether to retrieve
+// workflow.addConditionalEdges(
+//   "agent",
+//   // Assess agent decision
+//   shouldRetrieve,
+// );
 
+workflow.addEdge("standaloneQuery", "retrieve");
 workflow.addEdge("retrieve", "gradeDocuments");
 
-// Edges taken after the `action` node is called.
-workflow.addConditionalEdges(
-  "gradeDocuments",
-  // Assess agent decision
-  checkRelevance,
-  {
-    // Call tool node
-    yes: "generate",
-    no: "rewrite", // placeholder
-  },
-);
+// // Edges taken after the `action` node is called.
+// workflow.addConditionalEdges(
+//   "gradeDocuments",
+//   // Assess agent decision
+//   checkRelevance,
+//   {
+//     // Call tool node
+//     yes: "generate",
+//     no: "rewrite", // placeholder
+//   },
+// );
 
-workflow.addEdge("generate", END);
-workflow.addEdge("rewrite", "agent");
+workflow.addEdge("gradeDocuments", END);
+// workflow.addEdge("rewrite", "agent");
 
 // Compile
 const graphApp = workflow.compile();

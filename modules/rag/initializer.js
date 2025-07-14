@@ -5,11 +5,12 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { createClient } from "@supabase/supabase-js";
-import { LLM_TYPE, EMBEDDING_MODEL } from "./constants.js";
+import { LLM_TYPE, EMBEDDING_MODEL, VECTOR_STORE } from "./constants.js";
 
 class infraInitializer {
   constructor() {
     this.llmType = LLM_TYPE.OPENAI;
+    this.vectorStore = VECTOR_STORE.CHROMA;
   }
 
   initializeTextSplitter() {
@@ -20,8 +21,23 @@ class infraInitializer {
     });
   }
 
+  getLLMType() {
+    return this.llmType;
+  }
+
+  getvectorStore() {
+    let vectorStore;
+    this.embeddings = this.initializeEmbeddings();
+    if (this.vectorStore === VECTOR_STORE.CHROMA) {
+      vectorStore = this.initializeChromaDB(this.embeddings);
+    } else if (this.vectorStore === VECTOR_STORE.SUPABASE) {
+      vectorStore = this.initializeSupabase(this.embeddings);
+    }
+    return vectorStore;
+  }
+
   initializeLLMModel(deterministic = false) {
-    const llmType = this.llmType;
+    const llmType = this.getLLMType();
     if (llmType === LLM_TYPE.OPENAI) {
       return new ChatOpenAI({ 
         modelName: process.env.OPENAI_MODEL, 
