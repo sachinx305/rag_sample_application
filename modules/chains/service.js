@@ -9,8 +9,8 @@ import fs from "fs/promises";
 import * as dotenv from "dotenv";
 
 import * as prompts from "./prompts.js";
-import { LLM_TYPE, EMBEDDING_MODEL } from "./constants.js";
-import RagInitializer from "./initializer.js";
+import { LLM_TYPE, EMBEDDING_MODEL } from "../constants.js";
+import RagInitializer from "../initializer.js";
 import {
   consoleLog,
   testChromaConnection,
@@ -192,4 +192,4 @@ class RagService {
   }
 }
 
-export const RagDocService = new RagService();
+export const RagChainsService = new RagService();
