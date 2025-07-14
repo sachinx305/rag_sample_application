@@ -1,23 +1,12 @@
-import { Document } from "@langchain/core/documents";
+import { HumanMessage } from "@langchain/core/messages";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import {
-  RunnableSequence,
-  RunnablePassthrough,
-} from "@langchain/core/runnables";
-
-import fs from "fs/promises";
 import * as dotenv from "dotenv";
 
 import * as prompts from "./prompts.js";
 import { LLM_TYPE, EMBEDDING_MODEL } from "../constants.js";
-import RagInitializer from "../initializer.js";
-import {
-  consoleLog,
-  testChromaConnection,
-  createDocumentMetadata,
-  processDocumentsInBatches,
-  combineDocuments,
-} from "../chains/utils.js";
+import infraInitializer from "../initializer.js";
+import { consoleLog } from "../chains/utils.js";
+import graphApp from "./graph.js";
 
 // Load environment variables
 dotenv.config();
@@ -32,7 +21,7 @@ class RagService {
     this.debug = process.env.DEBUG;
 
     // Initialize components using the initializer
-    const initializer = new RagInitializer(this.llmType);
+    const initializer = new infraInitializer();
     this.model = initializer.initializeLLMModel();
     this.embeddings = initializer.initializeEmbeddings();
     this.vectorStore = initializer.initializeChromaDB(this.embeddings);
@@ -41,7 +30,24 @@ class RagService {
 
   async executeRagGraph(query) {
     this.userContext.push(`User: ${query}`);
-  }   
+    const inputs = { messages: [new HumanMessage(query)] };
+    let finalState;
+    finalState = await graphApp.invoke(inputs);
+    // for await (const output of await graphApp.stream(inputs)) {
+    //   for (const [key, value] of Object.entries(output)) {
+    //     const lastMsg = output[key].messages[output[key].messages.length - 1];
+    //     consoleLog(`Output from node: '${key}'`, this.debug);
+    //     console.dir({
+    //       type: lastMsg._getType(),
+    //       content: lastMsg.content,
+    //       tool_calls: lastMsg.tool_calls,
+    //     }, { depth: null });
+    //     consoleLog("---\n", this.debug);
+    //     finalState = value;
+    //   }
+    // }
+    return finalState;
+  }
 }
 
 export const RagGraphService = new RagService();

@@ -7,9 +7,9 @@ import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase"
 import { createClient } from "@supabase/supabase-js";
 import { LLM_TYPE, EMBEDDING_MODEL } from "./constants.js";
 
-class RagInitializer {
-  constructor(llmType = LLM_TYPE.OPENAI) {
-    this.llmType = llmType;
+class infraInitializer {
+  constructor() {
+    this.llmType = LLM_TYPE.OPENAI;
   }
 
   initializeTextSplitter() {
@@ -20,10 +20,13 @@ class RagInitializer {
     });
   }
 
-  initializeLLMModel() {
+  initializeLLMModel(deterministic = false) {
     const llmType = this.llmType;
     if (llmType === LLM_TYPE.OPENAI) {
-      return new ChatOpenAI({ modelName: process.env.OPENAI_MODEL }); // this is paid model
+      return new ChatOpenAI({ 
+        modelName: process.env.OPENAI_MODEL, 
+        temperature: deterministic ? 0 : 0.5 
+      }); // this is paid model
     } else if (llmType === LLM_TYPE.GEMINI) {
       return new ChatGoogleGenerativeAI({
         model: process.env.GEMINI_MODEL,
@@ -36,11 +39,11 @@ class RagInitializer {
     const llmType = this.llmType;
     if (llmType === LLM_TYPE.OPENAI) {
       return new OpenAIEmbeddings({
-        model: EMBEDDING_MODEL.OPENAI.model,
+        model: EMBEDDING_MODEL.OPENAI.model
       });
     } else if (llmType === LLM_TYPE.GEMINI) {
       return new GoogleGenerativeAIEmbeddings({
-        modelName: EMBEDDING_MODEL.GEMINI.model,
+        modelName: EMBEDDING_MODEL.GEMINI.model
       });
     }
   }
@@ -81,4 +84,4 @@ class RagInitializer {
   }
 }
 
-export default RagInitializer;
+export default infraInitializer;

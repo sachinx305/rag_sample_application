@@ -10,7 +10,7 @@ import * as dotenv from "dotenv";
 
 import * as prompts from "./prompts.js";
 import { LLM_TYPE, EMBEDDING_MODEL } from "../constants.js";
-import RagInitializer from "../initializer.js";
+import infraInitializer from "../initializer.js";
 import {
   consoleLog,
   testChromaConnection,
@@ -24,7 +24,6 @@ dotenv.config();
 
 class RagService {
   constructor() {
-    this.llmType = LLM_TYPE.OPENAI;
     this.userContext = [];
     this.standaloneQueryPrompt = prompts.default.standaloneQueryPrompt;
     this.userQueryPrompt = prompts.default.userQueryPrompt;
@@ -32,7 +31,8 @@ class RagService {
     this.debug = process.env.DEBUG;
 
     // Initialize components using the initializer
-    const initializer = new RagInitializer(this.llmType);
+    const initializer = new infraInitializer();
+    this.llmType = initializer.getLLMType();
     this.model = initializer.initializeLLMModel();
     this.embeddings = initializer.initializeEmbeddings();
     this.vectorStore = initializer.initializeChromaDB(this.embeddings);
