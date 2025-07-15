@@ -2,24 +2,26 @@ import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 import retriever from "./nodes/retriever.js";
 import standaloneQuery from "./nodes/standaloneQuery.js";
 import gradeDocuments from "./nodes/gradeDocuments.js";
+import webSearch from "./nodes/duckduckgoSearch.js";
 
 const GraphState = Annotation.Root({
   messages: Annotation({
     reducer: (x, y) => x.concat(y),
     default: () => [],
-  })
-})
+  }),
+});
 
 // Define the graph
 const workflow = new StateGraph(GraphState)
   // Define the nodes which we'll cycle between.
-  .addNode("retrieve", retriever)
-  .addNode("standaloneQuery", standaloneQuery)
-  .addNode("gradeDocuments", gradeDocuments)
-  // .addNode("answer", answer);
+  .addNode("retrieveDocsFromVectorDB", retriever)
+  .addNode("UserQueryToStandaloneQuery", standaloneQuery)
+  .addNode("webSearch", webSearch)
+  .addNode("isDocRelevantToQuestion", gradeDocuments);
+// .addNode("answer", answer);
 
-  // Call agent node to decide to retrieve or not
-workflow.addEdge(START, "standaloneQuery");
+// Call agent node to decide to retrieve or not
+workflow.addEdge(START, "UserQueryToStandaloneQuery");
 
 // // Decide whether to retrieve
 // workflow.addConditionalEdges(
@@ -28,22 +30,31 @@ workflow.addEdge(START, "standaloneQuery");
 //   shouldRetrieve,
 // );
 
-workflow.addEdge("standaloneQuery", "retrieve");
-workflow.addEdge("retrieve", "gradeDocuments");
+workflow.addEdge("UserQueryToStandaloneQuery", "retrieveDocsFromVectorDB");
+workflow.addEdge("retrieveDocsFromVectorDB", "isDocRelevantToQuestion");
 
 // // Edges taken after the `action` node is called.
-// workflow.addConditionalEdges(
-//   "gradeDocuments",
-//   // Assess agent decision
-//   checkRelevance,
-//   {
-//     // Call tool node
-//     yes: "generate",
-//     no: "rewrite", // placeholder
-//   },
-// );
-
-workflow.addEdge("gradeDocuments", END);
+workflow.addConditionalEdges(
+  "isDocRelevantToQuestion",
+  (state) => {
+    if (state["messages"][state["messages"].length - 1].content == "No") {
+      console.log(
+        "---DECISION: NOT ALL DOCUMENTS ARE NOT RELEVANT TO QUESTION, INCLUDE WEB SEARCH---"
+      );
+      return "no";
+    } else {
+      console.log("---DECISION: GENERATE---");
+      return "yes";
+    }
+  },
+  {
+    // Call tool node
+    yes: END,
+    no: "webSearch", // placeholder
+  }
+);
+workflow.addEdge("webSearch", "isDocRelevantToQuestion");
+workflow.addEdge("isDocRelevantToQuestion", END);
 // workflow.addEdge("rewrite", "agent");
 
 // Compile
