@@ -3,6 +3,7 @@ import retriever from "./nodes/retriever.js";
 import standaloneQuery from "./nodes/standaloneQuery.js";
 import gradeDocuments from "./nodes/gradeDocuments.js";
 import webSearch from "./nodes/duckduckgoSearch.js";
+import generateAnswer from "./nodes/generateAnswer.js";
 
 const GraphState = Annotation.Root({
   messages: Annotation({
@@ -17,8 +18,8 @@ const workflow = new StateGraph(GraphState)
   .addNode("retrieveDocsFromVectorDB", retriever)
   .addNode("UserQueryToStandaloneQuery", standaloneQuery)
   .addNode("webSearch", webSearch)
-  .addNode("isDocRelevantToQuestion", gradeDocuments);
-// .addNode("answer", answer);
+  .addNode("isDocRelevantToQuestion", gradeDocuments)
+  .addNode("generateAnswer", generateAnswer);
 
 // Call agent node to decide to retrieve or not
 workflow.addEdge(START, "UserQueryToStandaloneQuery");
@@ -49,12 +50,13 @@ workflow.addConditionalEdges(
   },
   {
     // Call tool node
-    yes: END,
-    no: "webSearch", // placeholder
+    yes: "generateAnswer",
+    no: "webSearch", 
   }
 );
 workflow.addEdge("webSearch", "isDocRelevantToQuestion");
-workflow.addEdge("isDocRelevantToQuestion", END);
+workflow.addEdge("isDocRelevantToQuestion", "generateAnswer");
+workflow.addEdge("generateAnswer", END);
 // workflow.addEdge("rewrite", "agent");
 
 // Compile

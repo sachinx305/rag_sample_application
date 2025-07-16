@@ -30,20 +30,20 @@ class RagService {
     const inputs = { messages: [new HumanMessage(query)] };
     let finalState;
     
-    finalState = await graphApp.invoke(inputs);
-    // for await (const output of await graphApp.stream(inputs)) {
-    //   for (const [key, value] of Object.entries(output)) {
-    //     const lastMsg = output[key].messages[output[key].messages.length - 1];
-    //     consoleLog(`Output from node: '${key}'`, this.debug);
-    //     console.dir({
-    //       type: lastMsg._getType(),
-    //       content: lastMsg.content,
-    //       tool_calls: lastMsg.tool_calls,
-    //     }, { depth: null });
-    //     consoleLog("---\n", this.debug);
-    //     finalState = value;
-    //   }
-    // }
+    // finalState = await graphApp.invoke(inputs);
+    for await (const output of await graphApp.stream(inputs)) {
+      for (const [key, value] of Object.entries(output)) {
+        const lastMsg = output[key].messages[output[key].messages.length - 1];
+        consoleLog(`Output from node: '${key}'`, this.debug);
+        console.dir({
+          type: lastMsg._getType(),
+          content: lastMsg.content,
+          tool_calls: lastMsg.tool_calls,
+        }, { depth: null });
+        consoleLog("---\n", this.debug);
+        finalState = lastMsg.content;
+      }
+    }
     return finalState;
   }
 }
