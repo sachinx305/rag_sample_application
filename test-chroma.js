@@ -1,4 +1,4 @@
-import { RagDocService } from "./modules/rag_doc/service.js";
+import { RagChainsService } from "./modules/rag/chains/service.js";
 
 console.log("🧪 Testing ChromaDB connection...\n");
 
@@ -7,7 +7,7 @@ async function testConnection() {
     console.log("🔍 Testing basic ChromaDB connectivity...");
 
     // Test if we can access the vector store object
-    if (!RagDocService.vectorStore) {
+    if (!RagChainsService.vectorStore) {
       console.log("❌ Vector store not initialized");
       return;
     }
@@ -15,7 +15,7 @@ async function testConnection() {
     console.log("✅ Vector store initialized successfully");
 
     // Test the connection with a simple document
-    const isConnected = await RagDocService.testChromaConnection();
+    const isConnected = await RagChainsService.testChromaConnection();
 
     if (isConnected) {
       console.log("✅ ChromaDB connection test passed!");

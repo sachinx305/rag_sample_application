@@ -1,6 +1,7 @@
 import multer from "multer";
 import fs from "fs/promises";
-import { RagDocService } from "./service.js";
+import { RagChainsService } from "./chains/service.js";
+import { RagGraphService } from "./graph/service.js";
 
 class RagController {
   // Multer config: only accept .txt, single file
@@ -25,7 +26,7 @@ class RagController {
         return res.status(400).json({ error: "No file uploaded." });
       }
       try {
-        const newDoc = await RagDocService.uploadDocumentAndCreateVectorStore(
+        const newDoc = await RagChainsService.uploadDocumentAndCreateVectorStore(
           req.file.path
         );
         res.status(201).json({
@@ -51,9 +52,9 @@ class RagController {
   async userQuery(req, res) {
     try {
       const { query } = req.body;
-      // const queryResult = await RagDocService.executeUserQuery(query);
+      // const queryResult = await RagChainsService.executeUserQuery(query);
       const queryResult =
-        await RagDocService.executeSequenceViaRunnableSequence(query);
+        await RagChainsService.executeSequenceViaRunnableSequence(query);
 
       res.status(200).json({
         success: true,
@@ -69,6 +70,28 @@ class RagController {
       });
     }
   }
+
+    // // execute user query
+    async userGraphQuery(req, res) {
+      try {
+        const { query } = req.body;
+        const queryResult =
+          await RagGraphService.executeRagGraph(query);
+  
+        res.status(200).json({
+          success: true,
+          data: queryResult,
+          message: "User query executed successfully",
+        });
+      } catch (error) {
+        console.log(error);
+        res.status(500).json({
+          success: false,
+          error: error.message,
+          message: "Failed to execute user query",
+        });
+      }
+    }
 }
 
 export const RagDocController = new RagController();

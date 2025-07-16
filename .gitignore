@@ -6,6 +6,8 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 yarn.lock
+graph.mmd
+graph.png
 
 # Environment variables
 .env

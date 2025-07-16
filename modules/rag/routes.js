@@ -8,5 +8,6 @@ router.post(
   RagDocController.uploadDocumentAndCreateVectorStore.bind(RagDocController)
 );
 router.post("/query", RagDocController.userQuery.bind(RagDocController));
+router.post("/graph/query", RagDocController.userGraphQuery.bind(RagDocController));
 
 export default router;

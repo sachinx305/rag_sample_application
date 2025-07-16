@@ -5,11 +5,14 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { SupabaseVectorStore } from "@langchain/community/vectorstores/supabase";
 import { createClient } from "@supabase/supabase-js";
-import { LLM_TYPE, EMBEDDING_MODEL } from "./constants.js";
+import { LLM_TYPE, EMBEDDING_MODEL, VECTOR_STORE } from "./constants.js";
+import dotenv from "dotenv";
+dotenv.config();
 
-class RagInitializer {
-  constructor(llmType = LLM_TYPE.OPENAI) {
-    this.llmType = llmType;
+class infraInitializer {
+  constructor() {
+    this.llmType = LLM_TYPE.OPENAI;
+    this.vectorStore = VECTOR_STORE.SUPABASE;
   }
 
   initializeTextSplitter() {
@@ -20,10 +23,28 @@ class RagInitializer {
     });
   }
 
-  initializeLLMModel() {
-    const llmType = this.llmType;
+  getLLMType() {
+    return this.llmType;
+  }
+
+  getvectorStore() {
+    let vectorStore;
+    this.embeddings = this.initializeEmbeddings();
+    if (this.vectorStore === VECTOR_STORE.CHROMA) {
+      vectorStore = this.initializeChromaDB(this.embeddings);
+    } else if (this.vectorStore === VECTOR_STORE.SUPABASE) {
+      vectorStore = this.initializeSupabase(this.embeddings);
+    }
+    return vectorStore;
+  }
+
+  initializeLLMModel(deterministic = false) {
+    const llmType = this.getLLMType();
     if (llmType === LLM_TYPE.OPENAI) {
-      return new ChatOpenAI({ modelName: process.env.OPENAI_MODEL }); // this is paid model
+      return new ChatOpenAI({ 
+        modelName: process.env.OPENAI_MODEL, 
+        temperature: deterministic ? 0 : 0.5 
+      }); // this is paid model
     } else if (llmType === LLM_TYPE.GEMINI) {
       return new ChatGoogleGenerativeAI({
         model: process.env.GEMINI_MODEL,
@@ -36,11 +57,11 @@ class RagInitializer {
     const llmType = this.llmType;
     if (llmType === LLM_TYPE.OPENAI) {
       return new OpenAIEmbeddings({
-        model: EMBEDDING_MODEL.OPENAI.model,
+        model: EMBEDDING_MODEL.OPENAI.model
       });
     } else if (llmType === LLM_TYPE.GEMINI) {
       return new GoogleGenerativeAIEmbeddings({
-        modelName: EMBEDDING_MODEL.GEMINI.model,
+        modelName: EMBEDDING_MODEL.GEMINI.model
       });
     }
   }
@@ -81,4 +102,4 @@ class RagInitializer {
   }
 }
 
-export default RagInitializer;
+export default infraInitializer;
