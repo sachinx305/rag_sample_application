@@ -12,7 +12,7 @@ dotenv.config();
 class infraInitializer {
   constructor() {
     this.llmType = LLM_TYPE.OPENAI;
-    this.vectorStore = VECTOR_STORE.SUPABASE;
+    this.vectorStore = VECTOR_STORE.CHROMA;
   }
 
   initializeTextSplitter() {

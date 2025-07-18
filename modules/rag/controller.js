@@ -18,17 +18,18 @@ class RagController {
 
   // Create new Doc
   async uploadDocumentAndCreateVectorStore(req, res) {
-    this.upload(req, res, async (err) => {
-      if (err) {
-        return res.status(400).json({ error: err.message });
-      }
-      if (!req.file) {
-        return res.status(400).json({ error: "No file uploaded." });
-      }
+    // this.upload(req, res, async (err) => {
+    //   if (err) {
+    //     return res.status(400).json({ error: err.message });
+    //   }
+    //   if (!req.file) {
+    //     return res.status(400).json({ error: "No file uploaded." });
+    //   }
       try {
-        const newDoc = await RagChainsService.uploadDocumentAndCreateVectorStore(
-          req.file.path
-        );
+        // const newDoc = await RagChainsService.uploadDocumentAndCreateVectorStore(
+        //   req.file.path
+        // );
+        const newDoc = await RagChainsService.uploadDocumentsAndCreateVectorStore();
         res.status(201).json({
           success: true,
           data: newDoc,
@@ -45,7 +46,7 @@ class RagController {
         // cleanup temp file
         await fs.unlink(req.file.path).catch(() => {});
       }
-    });
+    // });
   }
 
   // // execute user query
